@@ -1,3 +1,8 @@
+function displayMessage(message) {
+  var newElement = $('<div></div>').text(message.text);
+  $('#messages').append(newElement);
+}
+
 function divEscapedContentElement(message) {
   return $('<div></div>').text(message);
 }
@@ -45,6 +50,11 @@ $(document).ready(function() {
     $('#messages').append(divSystemContentElement(message));
   });
 
+  // Display received messages
+  socket.on('all', function (message) {
+    displayMessage(message);
+  });
+
   // Display the results of a room change
   socket.on('joinResult', function(result) {
     $('#room').text(result.room);
@@ -53,8 +63,7 @@ $(document).ready(function() {
 
   // Display received messages
   socket.on('message', function (message) {
-    var newElement = $('<div></div>').text(message.text);
-    $('#messages').append(newElement);
+    displayMessage(message);
   });
 
   // Display list of rooms available

@@ -25,6 +25,16 @@ Chat.prototype.processCommand = function(command) {
     , message = false;
 
   switch(command) {
+    // Message all rooms
+    case 'all':
+      if (words.length < 2) {
+        message = 'Please include a message.';
+        break;
+      }
+
+      this.socket.emit('all', words[1]);
+      break;
+
     // Handle room changing/creation
     case 'join':
       words.shift();
