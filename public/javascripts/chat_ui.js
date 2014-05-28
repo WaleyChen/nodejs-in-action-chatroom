@@ -57,7 +57,7 @@ $(document).ready(function() {
 
   // Display the results of a room change
   socket.on('joinResult', function(result) {
-    $('#room').text(result.room);
+    CurRoom = result.room;
     $('#messages').append(divSystemContentElement('Room changed.'));
   });
 
@@ -69,12 +69,16 @@ $(document).ready(function() {
   // Display list of rooms available
   socket.on('rooms', function(rooms) {
     $('#room-list').empty();
+
     for(var room in rooms) {
       room = room.substring(1, room.length);
       if (room != '') {
         $('#room-list').append(divEscapedContentElement(room));
       }
     }
+
+    // Highlist the current room
+    $('#room-list div:contains(' + CurRoom + ')').wrap('<b></b>');
 
     // Allow the click of a room name to change to that room
     $('#room-list div').click(function() {
