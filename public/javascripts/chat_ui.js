@@ -66,6 +66,15 @@ $(document).ready(function() {
     displayMessage(message);
   });
 
+    // Display list of guests in current room
+  socket.on('guests', function(guestNames) {
+    $('#guest-list').empty();
+
+    for(var i = 0; i < guestNames.length; i++) {
+      $('#guest-list').append(divEscapedContentElement(guestNames[i]));
+    }
+  });
+
   // Display list of rooms available
   socket.on('rooms', function(rooms) {
     $('#room-list').empty();
@@ -86,6 +95,11 @@ $(document).ready(function() {
       $('#send-message').focus();
     });
   });
+
+  // Request list of guests in current room intermittantly
+  setInterval(function() {
+    socket.emit('guests', CurRoom);
+  }, 1000);
 
   // Request list of rooms available intermittantly
   setInterval(function() {
