@@ -1,6 +1,14 @@
+function currentRoomSelector() {
+  return roomSelector(CurRoom);
+}
+
+function roomSelector(room) {
+  return $('#' + room + '-messages');
+}
+
 function displayMessage(message) {
   var newElement = $('<div></div>').text(message.text);
-  $('#messages').append(newElement);
+  roomSelector(message.room).append(newElement);
 }
 
 function divEscapedContentElement(message) {
@@ -19,14 +27,14 @@ function processUserInput(chatApp, socket) {
   if (message[0] == '/') {
     systemMessage = chatApp.processCommand(message);
     if (systemMessage) {
-      $('#messages').append(divSystemContentElement(systemMessage));
+      currentRoomSelector().append(divSystemContentElement(systemMessage));
     }
 
   // Broadcast non-command input to other users
   } else {
-    chatApp.sendMessage($('#room').text(), message);
-    $('#messages').append(divEscapedContentElement(message));
-    $('#messages').scrollTop($('#messages').prop('scrollHeight'));
+    chatApp.sendMessage(CurRoom, message);
+    currentRoomSelector().append(divEscapedContentElement(message));
+    currentRoomSelector().scrollTop(currentRoomSelector().prop('scrollHeight'));
   }
 
   $('#send-message').val('');
@@ -47,18 +55,36 @@ $(document).ready(function() {
       message = result.message;
     }
 
-    $('#messages').append(divSystemContentElement(message));
+    currentRoomSelector().append(divSystemContentElement(message));
   });
 
   // Display received messages
   socket.on('all', function (message) {
-    displayMessage(message);
+    $("#myTab li a").each(function() {
+      message['room'] = $(this).text();
+      displayMessage(message);
+    })
   });
 
   // Display the results of a room change
   socket.on('joinResult', function(result) {
     CurRoom = result.room;
-    $('#messages').append(divSystemContentElement('Room changed.'));
+    CurRooms.push(CurRoom)
+    ;
+    currentRoomSelector().append(divSystemContentElement('Room changed.'));
+    $('#myTab').append("<li><a href=\"#" + CurRoom + "\">" + CurRoom + "</a></li>");
+
+    $('#content').append(" \
+      <div class=\"tab-pane\" id=\"" + CurRoom + "\"> \
+        <ul> \
+          <div id=\"" + CurRoom + "-messages\"></div> \
+        </ul> \
+      </div>");
+
+    $('#myTab a[href=\"#' + CurRoom + '\"]').click(function (e) {
+      e.preventDefault()
+      $(this).tab('show')
+    }).tab('show');
   });
 
   // Display received messages
@@ -87,7 +113,10 @@ $(document).ready(function() {
     }
 
     // Highlist the current room
-    $('#room-list div:contains(' + CurRoom + ')').wrap('<b></b>');
+    $("#room-list div").filter(function() { 
+      return CurRooms.indexOf($(this).text()) > -1
+      // return $(this).text() === CurRoom;
+    }).wrap('<b></b>');
 
     // Allow the click of a room name to change to that room
     $('#room-list div').click(function() {
